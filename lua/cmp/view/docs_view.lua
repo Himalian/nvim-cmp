@@ -17,7 +17,8 @@ docs_view.new = function()
   self.window:option('scrolloff', 0)
   self.window:option('showbreak', 'NONE')
   self.window:option('wrap', true)
-  self.window:buffer_option('filetype', 'cmp_docs')
+  -- Use markdown filetype to enable proper rendering/highlighting
+  self.window:buffer_option('filetype', 'markdown')
   self.window:buffer_option('buftype', 'nofile')
   return self
 end
@@ -56,13 +57,13 @@ docs_view.open = function(self, e, view, bottom_up)
       vim.cmd([[syntax clear]])
       vim.api.nvim_buf_set_lines(self.window:get_buffer(), 0, -1, false, {})
     end)
-    local opts = {
-      max_width = max_width - border_info.horiz,
-    }
-    if documentation.max_height > 0 then
-      opts.max_height = documentation.max_height
-    end
-    vim.lsp.util.stylize_markdown(self.window:get_buffer(), documents, opts)
+    -- Use LSP's markdown processing approach for consistent behavior
+    local width = max_width - border_info.horiz
+    local contents = vim.lsp.util._normalize_markdown(documents, { width = width })
+
+    -- Set buffer content with proper markdown syntax
+    vim.api.nvim_buf_set_option(self.window:get_buffer(), 'filetype', 'markdown')
+    vim.api.nvim_buf_set_lines(self.window:get_buffer(), 0, -1, false, contents)
   end
 
   -- Set buffer as not modified, so it can be removed without errors
